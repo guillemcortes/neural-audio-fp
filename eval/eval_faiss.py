@@ -44,8 +44,8 @@ def load_memmap_data(source_dir,
     (data, data_shape)
 
     """
-    path_shape = source_dir + fname + '_shape.npy'
-    path_data = source_dir + fname + '.mm'
+    path_shape = os.path.join(source_dir, fname + '_shape.npy')
+    path_data = os.path.join(source_dir, fname + '.mm')
     data_shape = np.load(path_shape)
     if shape_only:
         return data_shape

@@ -3,11 +3,14 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 """ generate.py """
+import csv
 import os
 import sys
+
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.utils import Progbar
+
 from model.dataset import Dataset
 from model.fp.melspec.melspectrogram import get_melspec_layer
 from model.fp.nnfp import get_fingerprinter
@@ -28,7 +31,7 @@ def load_checkpoint(checkpoint_root_dir, checkpoint_name, checkpoint_index,
     """ Load a trained fingerprinter """
     # Create checkpoint
     checkpoint = tf.train.Checkpoint(model=m_fp)
-    checkpoint_dir = checkpoint_root_dir + f'/{checkpoint_name}/'
+    checkpoint_dir = os.path.join(checkpoint_root_dir, checkpoint_name)
     c_manager = tf.train.CheckpointManager(checkpoint, checkpoint_dir,
                                            max_to_keep=None)
 
@@ -66,7 +69,6 @@ def get_data_source(cfg, source_root_dir, skip_dummy):
     else:
         if skip_dummy:
             tf.print("Excluding \033[33m'dummy_db'\033[0m from source.")
-            pass
         else:
             ds['dummy_db'] = dataset.get_test_dummy_db_ds()
 
@@ -101,12 +103,8 @@ def generate_fingerprint(cfg,
          └── emb
              └── CHECKPOINT_NAME
                  └── CHECKPOINT_INDEX
-                     ├── db.mm
-                     ├── db_shape.npy
-                     ├── dummy_db.mm
-                     ├── dummy_db_shape.npy
-                     ├── query.mm
-                     └── query_shape.npy
+                     ├── custom.mm
+                     ├── custom_shape.npy
     """
     # Build and load checkpoint
     m_pre, m_fp = build_fp(cfg)
@@ -115,7 +113,7 @@ def generate_fingerprint(cfg,
                                        checkpoint_index, m_fp)
 
     # Get data source
-    """ ds = {'key1': <Dataset>, 'key2': <Dataset>, ...} """
+    # ds = {'key1': <Dataset>, 'key2': <Dataset>, ...}
     ds = get_data_source(cfg, source_root_dir, skip_dummy)
 
     # Make output directory
@@ -166,13 +164,32 @@ def generate_fingerprint(cfg,
             f"bsz={bsz}, {n_items} items, d={dim}"+ " ===")
         progbar = Progbar(len(ds[key]))
 
-        """ Parallelism to speed up preprocessing------------------------- """
+        # Parallelism to speed up preprocessing-------------------------
         enq = tf.keras.utils.OrderedEnqueuer(ds[key],
                                               use_multiprocessing=True,
                                               shuffle=False)
         enq.start(workers=cfg['DEVICE']['CPU_N_WORKERS'],
                   max_queue_size=cfg['DEVICE']['CPU_MAX_QUEUE'])
         i = 0
+
+        if source_root_dir.split('/')[-1].lower() == 'queries':
+            segments_csv = os.path.join(output_root_dir, 'queries_segments.csv')
+        elif source_root_dir.split('/')[-1].lower() == 'references':
+            segments_csv = os.path.join(output_root_dir, 'refs_segments.csv')
+        else:
+            raise NameError("Unknown type of audio. "
+                            "It's not query nor reference")
+
+        with open(segments_csv, 'w', newline='', encoding='utf-8') as csvfile:
+            fieldnames = ['segment_id', 'filename', 'intra_segment_id', 'offset_min', 'offset_max'] # from model/utils/dataloader_keras.py line 117
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+            for ii, seg in enumerate(ds[key].fns_event_seg_list):
+                writer.writerow({'segment_id': ii,
+                                 'filename': seg[0],
+                                 'intra_segment_id': seg[1],
+                                 'offset_min': seg[2],
+                                 'offset_max': seg[3]})
         while i < len(enq.sequence):
             progbar.update(i)
             X, _ = next(enq.get())
@@ -181,7 +198,7 @@ def generate_fingerprint(cfg,
             i += 1
         progbar.update(i, finalize=True)
         enq.stop()
-        """ End of Parallelism-------------------------------------------- """
+        # End of Parallelism--------------------------------------------
 
         tf.print(f'=== Succesfully stored {arr_shape[0]} fingerprint to {output_root_dir} ===')
         sz_check[key] = len(arr)

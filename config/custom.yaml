@@ -5,22 +5,42 @@ DIR:
     IR_ROOT_DIR : '/data/neural-audio-fp/neural-audio-fp-dataset/aug/ir/'
     SPEECH_ROOT_DIR : '/data/neural-audio-fp/neural-audio-fp-dataset/aug/speech/common_voice_8k/en/'
                 # Speech augmentation was not included in the ICASSP results.
-    OUTPUT_ROOT_DIR : './logs/emb/'
+    OUTPUT_ROOT_DIR : './logs/emb/epidemic_dummy/'
                 # Root directory where the generated embeddings (uncompressed
                 #  fingerprints) will be stored.
-    LOG_ROOT_DIR : './logs/'
+    #LOG_ROOT_DIR : '/srv/nfs/bmat_core/fingerprinting_qa/bin/neuralfp-1.0/logs/'
+    LOG_ROOT_DIR: '/data/fingerprinting/qa/bin/neuralfp-1.0/logs/'
                 # Root directory where the checkpoint, tensorboard logs and
                 # images will be stored.
+    # TODO Remove this
+    #QUERIES_SEGMENTS_CSV: '/data/fingerprinting/qa/queries_segments.csv'
+    #REFERENCES_SEGMENTS_CSV: '/data/fingerprinting/qa/references_segments.csv'
+
+# Index Parameters
+INDEX:
+    INDEX_TYPE: 'ivfpq'
+    N_CENTROIDS: 256
+    CODE_SZ: 64
+    NBITS: 8
+    NPROBE: 40
+
+# Matcher Parameters
+MATCHER:
+    INDEX_NN: 3  # Number of nearest neighbors the index return when querying.
+    CHUNK_LENGTH: 9  # Number of segments in a query chunk. (9 segments ==  5 seconds)
+    THRESHOLD: 0.65  # score threshold
+
+
 
 # Data selection for 'train' and 'generate' commands
 DATA_SEL:
-    TRAIN : '10k_icassp'
+    TRAIN : 'custom'
                 # '10k_icassp' for ICASSP results. No other options now.
-    TEST_DUMMY_DB : '10k_full'
+    TEST_DUMMY_DB : 'custom'
                 # '10k_full' or '100k_full_icassp'. This scales your search
                 # experiment. Dataset_mini users can only use '10k_full' mode.
                 # It's actually '10k_30s' though.
-    TEST_QUERY_DB : 'unseen_icassp' #'unseen_icassp'
+    TEST_QUERY_DB : 'custom' #'unseen_icassp'
                 # TEST_QUERY_DB presets:
                 # - 'unseen_icassp': use the fixed {query, db} pairs reproducing
                 #                    ICASSP results--2,000 test IDs for 500
@@ -59,7 +79,7 @@ BSZ:
     TR_N_ANCHOR : 320 # Usually N/2.
     VAL_BATCH_SZ : 120 # Must be EVEN number.
     VAL_N_ANCHOR : 60 # Usually N_val/2
-    TS_BATCH_SZ : 125
+    TS_BATCH_SZ : 119 #391 # EPIDMEIC REFS #119  # EPIDEMIC QUERIES 60 seconds / 0.5 hop-size - 1 = 119 segments/query
         # It is recommended to set it one of {125, 236, 250, 295, 500} to
         # avoid unwanted zero-paddings: our testset has 500 songs of 30s.
 
@@ -106,6 +126,6 @@ SPEC_AUG:
 
 # Device setup
 DEVICE:
-    CPU_N_WORKERS : 8 # 4 for minimal system. 8 is recommended.
-    CPU_MAX_QUEUE : 20 # 10 for minimal system. 20 is recommended.
+    CPU_N_WORKERS : 20 # 4 for minimal system. 8 is recommended.
+    CPU_MAX_QUEUE : 40 # 10 for minimal system. 20 is recommended.
 
