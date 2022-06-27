@@ -35,6 +35,7 @@ class Dataset:
     def __init__(self, cfg=dict()):
         # Data location
         self.source_root_dir = cfg['DIR']['SOURCE_ROOT_DIR']
+        self.mix_root_dir = cfg['DIR']['MIX_ROOT_DIR'] # Added for Broadcast retraining
         self.bg_root_dir = cfg['DIR']['BG_ROOT_DIR'] #!
         self.ir_root_dir = cfg['DIR']['IR_ROOT_DIR']
         self.speech_root_dir = cfg['DIR']['SPEECH_ROOT_DIR']
@@ -78,6 +79,7 @@ class Dataset:
 
         # Source (music) file paths
         self.tr_source_fps = self.val_source_fps = None
+        self.tr_mix_fps = self.val_mix_fps = None
         self.ts_dummy_db_source_fps = None
         self.ts_query_icassp_fps = self.ts_db_icassp_fps = None
         self.ts_query_db_unseen_fps = None
@@ -130,14 +132,19 @@ class Dataset:
         # Source (music) file paths for train set
         if self.datasel_train == '10k_icassp':
             _prefix = 'train-10k-30s/'
+        elif self.datasel_train == 'audible':
+            _prefix = 'dataset/'
         else:
             raise NotImplementedError(self.datasel_train)
+        # TODO Change to reading from .lst file
         self.tr_source_fps = sorted(
-            glob.glob(self.source_root_dir + _prefix + '**/*.wav',
-                      recursive=True))
+            glob.glob(self.source_root_dir + '**/*.wav', recursive=True))
+        self.tr_mix_fps = sorted(
+            glob.glob(self.mix_root_dir + '**/*.wav', recursive=True))
 
         ds = genUnbalSequence(
-            fns_event_list=self.tr_source_fps,
+            fns_source_event_list=self.tr_source_fps, # Source song file paths as a list
+            fns_mix_event_list=self.tr_mix_fps, # Mix song file paths as a list
             bsz=self.tr_batch_sz,
             n_anchor=self.tr_n_anchor, #ex) bsz=40, n_anchor=8: 4 positive samples per anchor
             duration=self.dur,  # duration in seconds

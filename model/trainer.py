@@ -108,6 +108,7 @@ def mini_search_validation(ds, m_pre, m_fp, mode='argmin',
 
 
 def trainer(cfg, checkpoint_name):
+    import pudb;pudb.set_trace()
     # Dataloader
     dataset = Dataset(cfg)
 
