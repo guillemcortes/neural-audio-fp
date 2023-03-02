@@ -61,11 +61,11 @@ def prevent_overwrite(key, target_path):
         if answer.lower() not in ['y', 'yes']: sys.exit()
 
 
-def get_data_source(cfg, source_root_dir, skip_dummy):
+def get_data_source(cfg, source, skip_dummy, isdir=False):
     dataset = Dataset(cfg)
     ds = dict()
-    if source_root_dir:
-        ds['custom_source'] = dataset.get_custom_db_ds(source_root_dir)
+    if source:
+        ds['custom_source'] = dataset.get_custom_db_ds(source, isdir=False)
     else:
         if skip_dummy:
             tf.print("Excluding \033[33m'dummy_db'\033[0m from source.")
@@ -93,9 +93,10 @@ def test_step(X, m_pre, m_fp):
 def generate_fingerprint(cfg,
                          checkpoint_name,
                          checkpoint_index,
-                         source_root_dir,
+                         source,
                          output_root_dir,
-                         skip_dummy):
+                         skip_dummy,
+                         isdir):
     """
     After run, the output (generated fingerprints) directory will be:
       .
@@ -114,7 +115,7 @@ def generate_fingerprint(cfg,
 
     # Get data source
     # ds = {'key1': <Dataset>, 'key2': <Dataset>, ...}
-    ds = get_data_source(cfg, source_root_dir, skip_dummy)
+    ds = get_data_source(cfg, source, skip_dummy, isdir)
 
     # Make output directory
     if output_root_dir:

@@ -72,7 +72,7 @@ def train(checkpoint_name, config, max_epoch):
     cfg = load_config(config)
     if max_epoch: update_config(cfg, 'TRAIN', 'MAX_EPOCH', max_epoch)
     print_config(cfg)
-    # allow_gpu_memory_growth()
+    allow_gpu_memory_growth()
     trainer(cfg, checkpoint_name)
 
 
@@ -85,7 +85,8 @@ def train(checkpoint_name, config, max_epoch):
               help="Path of the model configuration file located in 'config/'." +
               " Default is 'default'")
 @click.option('--source', '-s', default=None, type=click.STRING, required=False,
-              help="Custom source root directory. The source must be 16-bit "
+              help="Sources. It can be a .lst file or a path pointing to a "
+              "custom source root directory. The source must be 16-bit "
               "8 Khz mono WAV. This is only useful when constructing a database"
               " without synthesizing queries.")
 @click.option('--output', '-o', default=None, type=click.STRING, required=False,
@@ -111,8 +112,15 @@ def generate(checkpoint_name, checkpoint_index, config, source, output,
 
     cfg = load_config(config)
     allow_gpu_memory_growth()
+    if os.path.isdir(source):
+        isdir=True
+    elif os.path.isfile(source):
+        isdir=False
+    else:
+        print('ERROR: Unknown source')
+        sys.exit()
     generate_fingerprint(cfg, checkpoint_name, checkpoint_index, source,
-                         output, skip_dummy)
+                         output, skip_dummy, isdir)
 
 
 # Create index
