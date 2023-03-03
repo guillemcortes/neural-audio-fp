@@ -182,7 +182,7 @@ def match(query_bname, query_fp_path, refs_fp_path, index_path, config,
 
     cfg = load_config(config, display=False)
     allow_gpu_memory_growth()
-    #import pudb; pudb.set_trace()
+
     refs_segments_path = os.path.join(
         os.path.dirname(refs_fp_path), 'refs_segments.csv')
     references_segments = pd.read_csv(refs_segments_path)
@@ -200,7 +200,7 @@ def match(query_bname, query_fp_path, refs_fp_path, index_path, config,
         '"Reference begin time","Reference end time","Confidence"')
     print('"","","","","","",""')
     for qmatch in formatted_matches:
-        qmatch.update({'query': query_bname.replace('.wav','')})
+        qmatch.update({'query': query_bname[:-4]}) # trim added .wav extension
         print('"{}","{}","{}","{}","{}","{}","{}"'.format(
                 qmatch['query'], qmatch['query_start'], qmatch['query_end'],
                 qmatch['ref']+extension, qmatch['ref_start'],

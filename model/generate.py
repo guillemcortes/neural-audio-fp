@@ -61,11 +61,11 @@ def prevent_overwrite(key, target_path):
         if answer.lower() not in ['y', 'yes']: sys.exit()
 
 
-def get_data_source(cfg, source, skip_dummy, isdir=False):
+def get_data_source(cfg, source, skip_dummy, isdir):
     dataset = Dataset(cfg)
     ds = dict()
     if source:
-        ds['custom_source'] = dataset.get_custom_db_ds(source, isdir=False)
+        ds['custom_source'] = dataset.get_custom_db_ds(source, isdir)
     else:
         if skip_dummy:
             tf.print("Excluding \033[33m'dummy_db'\033[0m from source.")
@@ -173,9 +173,9 @@ def generate_fingerprint(cfg,
                   max_queue_size=cfg['DEVICE']['CPU_MAX_QUEUE'])
         i = 0
 
-        if source_root_dir.split('/')[-1].lower() == 'queries':
+        if source.split('/')[-1].lower() == 'queries':
             segments_csv = os.path.join(output_root_dir, 'queries_segments.csv')
-        elif source_root_dir.split('/')[-1].lower() == 'references':
+        elif source.split('/')[-1].lower() == 'references':
             segments_csv = os.path.join(output_root_dir, 'refs_segments.csv')
         else:
             raise NameError("Unknown type of audio. "

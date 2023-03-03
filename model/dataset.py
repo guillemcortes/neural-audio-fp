@@ -4,6 +4,7 @@
 # LICENSE file in the root directory of this source tree.
 """ dataset.py """
 import glob
+import os
 from model.utils.dataloader_keras import genUnbalSequence
 
 
@@ -354,10 +355,11 @@ class Dataset:
         else:
             raise NotImplementedError(self.datasel_test_query_db)
 
-    def get_custom_db_ds(self, source: str, isdir=False):
+    def get_custom_db_ds(self, source: str, isdir):
         """Construc DB (or query) from custom source files."""
+
         if isdir is True:
-            fps = sorted(glob.glob(source[0] + "/**/*.wav", recursive=True))
+            fps = sorted(glob.glob(os.path.join(source + "/**/*.wav"), recursive=True))
         else:
             fps = []
             with open(source, "r") as fin:
