@@ -12,6 +12,7 @@ import yaml
 import numpy  as np
 import pandas as pd
 import faiss
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 
 def load_config(config_filepath, display=True):
     if display:
