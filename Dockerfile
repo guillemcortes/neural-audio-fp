@@ -20,7 +20,8 @@ RUN wget --quiet \
     echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
     echo "conda activate base" >> ~/.bashrc
 
-RUN apt-get install -y libopenblas-dev
+# can be removed for Intel CPU users
+# RUN apt-get install -y libopenblas-dev
 
 RUN apt-get install -y curl grep sed dpkg git tmux nano htop && \
     apt-get clean
