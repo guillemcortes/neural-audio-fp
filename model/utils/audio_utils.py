@@ -137,13 +137,14 @@ def ir_aug_batch(event_batch, ir_batch):
     return X_ir_aug
 
 
-def get_fns_seg_list(fns_list=[],
+def get_fns_seg_list(fns_source_list=[],
+                     fns_mix_list = [],
                      segment_mode='all',
                      fs=22050,
                      duration=1,
                      hop=None):
     """
-    return: fns_event_seg_list
+    return: fns_source_event_seg_list, fns_mix_event_seg_list
         
         [[filename, seg_idx, offset_min, offset_max], [ ... ] , ... [ ... ]]
         
@@ -152,16 +153,19 @@ def get_fns_seg_list(fns_list=[],
         
     """
     if hop == None: hop = duration
-    fns_event_seg_list = []
+    fns_source_event_seg_list = []
+    fns_mix_event_seg_list = []
 
-    for offset_idx, filename in enumerate(fns_list):
+    for offset_idx, filenames in enumerate(zip(fns_source_list,fns_mix_list)):
         # Get audio info
         n_frames_in_seg = fs * duration
         n_frames_in_hop = fs * hop  # 2019 09.05
-        file_ext = filename[-3:]
+        source_fn = filenames[0]
+        mix_fn = filenames[1]
+        file_ext = source_fn[-3:]
 
         if file_ext == 'wav':
-            pt_wav = wave.open(filename, 'r')
+            pt_wav = wave.open(source_fn, 'r')
             _fs = pt_wav.getframerate()
 
             if fs != _fs:
@@ -196,8 +200,10 @@ def get_fns_seg_list(fns_list=[],
                 if seg_idx == (n_segs - 1):  # last seg
                     offset_max = residual_frames
 
-                fns_event_seg_list.append(
-                    [filename, seg_idx, offset_min, offset_max])
+                fns_source_event_seg_list.append(
+                    [source_fn, seg_idx, offset_min, offset_max])
+                fns_mix_event_seg_list.append(
+                    [mix_fn, seg_idx, offset_min, offset_max])
         elif segment_mode == 'random_oneshot':
             seg_idx = np.random.randint(0, n_segs)
             offset_min, offset_max = n_frames_in_hop, n_frames_in_hop
@@ -205,17 +211,21 @@ def get_fns_seg_list(fns_list=[],
                 offset_min = 0
             if seg_idx == (n_segs - 1):  # last seg
                 offset_max = residual_frames
-            fns_event_seg_list.append(
-                [filename, seg_idx, offset_min, offset_max])
+            fns_source_event_seg_list.append(
+                [source_fn, seg_idx, offset_min, offset_max])
+            fns_mix_event_seg_list.append(
+                [mix_fn, seg_idx, offset_min, offset_max])
         elif segment_mode == 'first':
             seg_idx = 0
             offset_min, offset_max = 0, 0
-            fns_event_seg_list.append(
-                [filename, seg_idx, offset_min, offset_max])
+            fns_source_event_seg_list.append(
+                [source_fn, seg_idx, offset_min, offset_max])
+            fns_mix_event_seg_list.append(
+                [mix_fn, seg_idx, offset_min, offset_max])
         else:
             raise NotImplementedError(segment_mode)
 
-    return fns_event_seg_list
+    return fns_source_event_seg_list, fns_mix_event_seg_list 
 
 
 def load_audio(filename=str(),
